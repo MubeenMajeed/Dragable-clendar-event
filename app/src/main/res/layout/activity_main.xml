@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    android:id="@+id/rootLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/pad_50dp"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Header"
+            android:textSize="@dimen/pad_20dp"
+            android:layout_margin="@dimen/pad_10dp"/>
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <FrameLayout
+            android:id="@+id/frame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <RelativeLayout
+                android:id="@+id/timeBlockParent"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:id="@+id/timeBlock"
+                    android:tag="timeBlock"
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:background="@color/colorPrimary">
+
+                    <TextView
+                        android:id="@+id/label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="@dimen/pad_5dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/dragHandle"
+                    android:layout_width="@dimen/pad_50dp"
+                    android:layout_height="@dimen/pad_30dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true">
+
+                    <ImageView
+                        android:layout_width="@dimen/pad_30dp"
+                        android:layout_height="@dimen/pad_20dp"
+                        android:layout_gravity="bottom"
+                        android:src="@drawable/drag_handle"/>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+        </FrameLayout>
+
+    </ScrollView>
+
+</LinearLayout>
