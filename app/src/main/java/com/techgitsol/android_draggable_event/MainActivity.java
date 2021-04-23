@@ -8,6 +8,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,7 +31,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements  GestureDetector.OnGestureListener {
     // Values will come from policy
     private static final int MIN_15_BLOCKS_DURATION = 2;
     public static final int MAX_TIME_BLOCKS = 12;
@@ -70,10 +72,18 @@ public class MainActivity extends Activity {
     TextView label;
     FrameLayout frame;
 
+
+    GestureDetector mGestureDetector;
+
+
     @Override
     public void onCreate(Bundle b) {
         super.onCreate(b);
         setContentView(R.layout.activity_main);
+
+        mGestureDetector = new GestureDetector(this,this);
+
+
         label = ((TextView) findViewById(R.id.label));
         scrollView = ((ScrollView) findViewById(R.id.scrollView));
         headerLayout = ((LinearLayout) findViewById(R.id.headerLayout));
@@ -438,78 +448,13 @@ public class MainActivity extends Activity {
         };
     }
 
-    private OnTouchListener getDragTimeBlockTouchListener() {
+    public OnTouchListener getDragTimeBlockTouchListener() {
         return new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 // Prevent other touch events from stealing
-                scrollView.requestDisallowInterceptTouchEvent(true);
+                mGestureDetector.onTouchEvent(event);
 
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        // Start tracing finger movement
-                        start.set(event.getX(), event.getY());
-                        enableDragMode();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        enableNoneMode(timeBlock);
-                        // Allow other touch events to steal
-                        scrollView.requestDisallowInterceptTouchEvent(false);
-
-                        // Adjust block position
-                        if (positionToLabelEntry != null) {
-                            setTopMargin(positionToLabelEntry.getKey());
-                        }
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if (mode == DRAG) {
-                            // Set dragging distance
-                            int draggingDistance = (int) (event.getY() - start.y);
-                            boolean goingDown = draggingDistance > 0 ? true : false;
-
-                            // Define dragging limits
-                            int timeTableTopLimitLocation = lineNumberToScreenPosition.get(0);
-                            int timeTableBottomLimitLocation = lineNumberToScreenPosition.get(lineNumberToScreenPosition.size() - 1);
-                            int timeBlockBottomLimitLocation = timeTableBottomLimitLocation - params.height;
-
-                            // Remove if you only want to allow events after red line
-                            upperLimitPosition = timeTableTopLimitLocation;
-
-                            int potentialTopMargin = timeBlockParentParams.topMargin + draggingDistance;
-
-                            // Readjust top margin to prevent going over limits
-                            if (potentialTopMargin < upperLimitPosition) {
-                                potentialTopMargin = upperLimitPosition;
-                            }
-                            if (potentialTopMargin > timeBlockBottomLimitLocation) {
-                                potentialTopMargin = timeBlockBottomLimitLocation;
-                            }
-
-                            // Make it scroll when finger is close to window top/down
-                            DisplayMetrics metrics = new DisplayMetrics();
-                            getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-                            Rect rectangle = new Rect();
-                            getWindow().getDecorView().getWindowVisibleDisplayFrame(rectangle);
-                            int statusBarHeight = rectangle.top;
-
-                            if ((event.getRawY() <= (statusBarHeight + event.getY() + getResources().getDimensionPixelSize(R.dimen.pad_10dp) + headerLayout.getLayoutParams().height) && !goingDown)
-                                    || (event.getRawY() >= metrics.heightPixels - (timeBlock.getHeight() - event.getY()) && goingDown)
-                                    || (timeBlockParentParams.topMargin + params.height >= lineNumberToScreenPosition.get(lineNumberToScreenPosition.size() - 1) && goingDown)) {
-                                scrollView.smoothScrollBy(0, draggingDistance);
-                            }
-
-                            // Set top margin to position choose by finger
-                            setTopMargin(potentialTopMargin);
-
-                            // Get closest time block and show minutes
-                            getClosestTimeBlockAndShowMinuteLabel();
-
-                            // Adjust time block position to position that makes sense
-                            setTimeBlockPosition(false);
-                        }
-                        break;
-                }
                 return true;
             }
         };
@@ -572,6 +517,7 @@ public class MainActivity extends Activity {
             frame.addView(minuteLabel, 2);
         }
     }
+    String TAG = "NAKAR";
 
     private void enableDragMode() {
         timeBlock.setBackgroundColor(getResources().getColor(R.color.gray));
@@ -695,5 +641,106 @@ public class MainActivity extends Activity {
         cal.set(Calendar.MINUTE, minuteComponent);
 
         return cal;
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        Log.d(TAG, "onDown: ");
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+        Log.d(TAG, "onShowPress: ");
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        Log.d(TAG, "onSingleTapUp: ");
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        Log.d(TAG, "onScroll: ");
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent event) {
+        Log.d(TAG, "onLongPress: ");
+        scrollView.requestDisallowInterceptTouchEvent(true);
+
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                // Start tracing finger movement
+                start.set(event.getX(), event.getY());
+                enableDragMode();
+                break;
+            case MotionEvent.ACTION_UP:
+                enableNoneMode(timeBlock);
+                // Allow other touch events to steal
+                scrollView.requestDisallowInterceptTouchEvent(false);
+
+                // Adjust block position
+                if (positionToLabelEntry != null) {
+                    setTopMargin(positionToLabelEntry.getKey());
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mode == DRAG) {
+                    // Set dragging distance
+                    int draggingDistance = (int) (event.getY() - start.y);
+                    boolean goingDown = draggingDistance > 0 ? true : false;
+
+                    // Define dragging limits
+                    int timeTableTopLimitLocation = lineNumberToScreenPosition.get(0);
+                    int timeTableBottomLimitLocation = lineNumberToScreenPosition.get(lineNumberToScreenPosition.size() - 1);
+                    int timeBlockBottomLimitLocation = timeTableBottomLimitLocation - params.height;
+
+                    // Remove if you only want to allow events after red line
+                    upperLimitPosition = timeTableTopLimitLocation;
+
+                    int potentialTopMargin = timeBlockParentParams.topMargin + draggingDistance;
+
+                    // Readjust top margin to prevent going over limits
+                    if (potentialTopMargin < upperLimitPosition) {
+                        potentialTopMargin = upperLimitPosition;
+                    }
+                    if (potentialTopMargin > timeBlockBottomLimitLocation) {
+                        potentialTopMargin = timeBlockBottomLimitLocation;
+                    }
+
+                    // Make it scroll when finger is close to window top/down
+                    DisplayMetrics metrics = new DisplayMetrics();
+                    getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+                    Rect rectangle = new Rect();
+                    getWindow().getDecorView().getWindowVisibleDisplayFrame(rectangle);
+                    int statusBarHeight = rectangle.top;
+
+                    if ((event.getRawY() <= (statusBarHeight + event.getY() + getResources().getDimensionPixelSize(R.dimen.pad_10dp) + headerLayout.getLayoutParams().height) && !goingDown)
+                            || (event.getRawY() >= metrics.heightPixels - (timeBlock.getHeight() - event.getY()) && goingDown)
+                            || (timeBlockParentParams.topMargin + params.height >= lineNumberToScreenPosition.get(lineNumberToScreenPosition.size() - 1) && goingDown)) {
+                        scrollView.smoothScrollBy(0, draggingDistance);
+                    }
+
+                    // Set top margin to position choose by finger
+                    setTopMargin(potentialTopMargin);
+
+                    // Get closest time block and show minutes
+                    getClosestTimeBlockAndShowMinuteLabel();
+
+                    // Adjust time block position to position that makes sense
+                    setTimeBlockPosition(false);
+                }
+                break;
+        }
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        return false;
     }
 }
